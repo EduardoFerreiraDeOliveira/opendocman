@@ -1,4 +1,4 @@
-FROM php:8.2.29-apache
+FROM php:8.4-apache
 MAINTAINER Logical Arts, LLC <info@logicalarts.net>
 
 ENV APACHE_DOCUMENT_ROOT /var/www/html/public
@@ -9,6 +9,13 @@ RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-av
 RUN apt-get update \
   && apt-get install --no-install-recommends -y apt-utils vim git openssl ssl-cert default-mysql-client msmtp msmtp-mta \
   && docker-php-ext-install pdo_mysql pdo \
+  && rm -rf /var/lib/apt/lists/*
+
+# Extra PHP extensions: zip (required) and gd (thumbnails)
+RUN apt-get update \
+  && apt-get install --no-install-recommends -y libzip-dev libpng-dev libjpeg-dev \
+  && docker-php-ext-configure gd --with-jpeg \
+  && docker-php-ext-install -j"$(nproc)" zip gd \
   && rm -rf /var/lib/apt/lists/*
 
 # Copy php configs

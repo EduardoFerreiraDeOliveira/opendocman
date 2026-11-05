@@ -1,6 +1,7 @@
 services:
   db:
     image: mariadb:10.4
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     volumes:
       - ${HOST_DB_PATH:-odm-db-data}:/var/lib/mysql
     environment:

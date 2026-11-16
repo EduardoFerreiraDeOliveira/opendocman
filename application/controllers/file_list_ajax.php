@@ -299,6 +299,30 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
     }
 }
 
+// Step 6.6: Batch load property permissions (used only when the category has no say)
+$property_perms_map = array();
+$query = "
+    SELECT d.id AS fid, pp.dept_id, pp.user_id, pp.rights
+    FROM {$db_prefix}data d
+    JOIN {$db_prefix}property_perms pp ON pp.prop_id = d.property_id
+    WHERE d.id IN ($in_placeholders)
+      AND d.property_id > 0
+      AND (pp.user_id = ? OR pp.dept_id = ?)
+";
+$stmt = $pdo->prepare($query);
+$stmt->execute(array_merge($page_params, [$_SESSION['uid'], $user_obj->getDeptId()]));
+while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $fid = (int)$row['fid'];
+    if (!isset($property_perms_map[$fid])) {
+        $property_perms_map[$fid] = [];
+    }
+    if ((int)$row['user_id'] === (int)$_SESSION['uid']) {
+        $property_perms_map[$fid]['user'] = (int)$row['rights'];
+    } elseif ((int)$row['dept_id'] > 0) {
+        $property_perms_map[$fid]['dept'] = (int)$row['rights'];
+    }
+}
+
 // Step 7: Batch load reviewer assignments (replaces N*isReviewerForFile)
 $reviewer_file_ids = array();
 if (!$is_admin) {
@@ -344,6 +368,11 @@ foreach ($page_ids as $fileid) {
                 $userAccessLevel = $category_perms_map[$fileid]['user'];
             } elseif (isset($category_perms_map[$fileid]['dept'])) {
                 $userAccessLevel = $category_perms_map[$fileid]['dept'];
+            } elseif (isset($property_perms_map[$fileid]['user'])) {
+                // Property fallback (category rules come first)
+                $userAccessLevel = $property_perms_map[$fileid]['user'];
+            } elseif (isset($property_perms_map[$fileid]['dept'])) {
+                $userAccessLevel = $property_perms_map[$fileid]['dept'];
             } else {
                 $userAccessLevel = 0;
             }

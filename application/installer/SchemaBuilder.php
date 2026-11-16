@@ -55,13 +55,44 @@ class SchemaBuilder
                 is_public tinyint(1) DEFAULT 0,
                 reviewer int(11) unsigned default NULL,
                 reviewer_comments varchar(255) default NULL,
+                property_id int(11) unsigned NOT NULL default '0',
                 PRIMARY KEY  (id),
                 KEY data_idx (id,owner),
                 KEY id (id),
                 KEY id_2 (id),
                 KEY publishable (publishable),
+                KEY property_id (property_id),
                 KEY description (description(200))
             ) ENGINE = MYISAM",
+
+            "CREATE TABLE `{$prefix}property` (
+                id int(11) unsigned NOT NULL auto_increment,
+                reference varchar(50) NOT NULL default '',
+                address varchar(255) NOT NULL default '',
+                city varchar(100) default NULL,
+                type varchar(30) NOT NULL default 'apartment',
+                price decimal(12,2) default NULL,
+                status varchar(20) NOT NULL default 'for_sale',
+                owner_name varchar(255) default NULL,
+                description text default NULL,
+                created datetime NOT NULL,
+                created_by int(11) unsigned default NULL,
+                PRIMARY KEY (id),
+                UNIQUE KEY reference (reference),
+                KEY city (city),
+                KEY status (status)
+            ) ENGINE = MYISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+
+            "CREATE TABLE `{$prefix}property_perms` (
+                prop_id int(11) unsigned NOT NULL,
+                dept_id int(11) unsigned NOT NULL default '0',
+                user_id int(11) unsigned NOT NULL default '0',
+                rights tinyint(4) NOT NULL default '0',
+                PRIMARY KEY (prop_id, dept_id, user_id),
+                KEY prop_id (prop_id),
+                KEY dept_id (dept_id),
+                KEY user_id (user_id)
+            ) ENGINE = MYISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
 
             "CREATE TABLE `{$prefix}department` (
                 id int(11) unsigned NOT NULL auto_increment,

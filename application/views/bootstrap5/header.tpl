@@ -9,13 +9,14 @@
     {if $g_lang_username != ''}
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="out">{$site_title|escape}</a>
+            <a class="navbar-brand" href="home">{$site_title|escape}</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
-                    <li class="nav-item"><a class="nav-link" href="out">{$g_lang_home}</a></li>
+                    <li class="nav-item"><a class="nav-link" href="home">{$g_lang_home}</a></li>
+                    <li class="nav-item"><a class="nav-link" href="out">{$g_lang_property_all_documents|default:'All documents'}</a></li>
                     {if $can_checkin eq '1'}<li class="nav-item"><a class="nav-link" href="in">{$g_lang_button_check_in}</a></li>{/if}
                     <li class="nav-item"><a class="nav-link" href="search">{$g_lang_search}</a></li>
                     {if $can_add eq '1'}<li class="nav-item"><a class="nav-link" href="add">{$g_lang_button_add_document}</a></li>{/if}

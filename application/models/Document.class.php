@@ -25,8 +25,10 @@ class Document
         $publishable = (string) $params['publishable'];
         $isPublic = $params['is_public'] ? 1 : 0;
 
-        $stmt = $pdo->prepare("INSERT INTO {$prefix}data (status, category, owner, realname, created, description, department, comment, default_rights, publishable, is_public) VALUES (0, :category, :owner_id, :realname, NOW(), :description, :current_user_dept, :comment, 0, {$publishable}, {$isPublic})");
+        $stmt = $pdo->prepare("INSERT INTO {$prefix}data (status, category, property_id, owner, realname, created, description, department, comment, default_rights, publishable, is_public) VALUES (0, :category, :property_id, :owner_id, :realname, NOW(), :description, :current_user_dept, :comment, 0, {$publishable}, {$isPublic})");
         $stmt->bindParam(':category', $params['category']);
+        $propertyId = (int) ($params['property_id'] ?? 0);
+        $stmt->bindParam(':property_id', $propertyId, PDO::PARAM_INT);
         $stmt->bindParam(':owner_id', $params['owner_id']);
         $stmt->bindParam(':realname', $params['realname']);
         $stmt->bindParam(':description', $params['description']);

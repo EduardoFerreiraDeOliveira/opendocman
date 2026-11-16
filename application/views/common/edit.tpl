@@ -63,6 +63,16 @@
                     {/if}
                 </div>
 
+                <div class="mb-3">
+                    <label class="form-label" for="property_id">{$property_labels.property}</label>
+                    <select name="property_id" id="property_id" class="form-select">
+                        <option value="0">{$property_labels.none}</option>
+                    {foreach from=$props_array item=prop}
+                        <option value="{$prop.id}" {if $pre_selected_property eq $prop.id}selected{/if}>{$prop.reference|escape:'html'} &ndash; {$prop.address|escape:'html'}</option>
+                    {/foreach}
+                    </select>
+                </div>
+
                 <div class="mb-3 full-width" id="departmentSelect">
                     <label class="form-label">
                         <a href="help.html#Add_File_-_Department" onClick="return popup(this, 'Help')" class="text-decoration-none">{$g_lang_addpage_permissions}</a>

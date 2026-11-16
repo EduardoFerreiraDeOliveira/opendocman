@@ -75,7 +75,7 @@ if (isset($_SESSION['uid'])) {
     if (isset($_REQUEST['redirection'])) {
         redirect_visitor($_REQUEST['redirection']);
     } else {
-        redirect_visitor('out');
+        redirect_visitor('home');
     }
 }
 
@@ -119,7 +119,7 @@ if (isset($_POST['login'])) {
         if (isset($_REQUEST['redirection'])) {
             redirect_visitor($_REQUEST['redirection']);
         } else {
-            redirect_visitor('out');
+            redirect_visitor('home');
         }
     } else {
         // Login Failed

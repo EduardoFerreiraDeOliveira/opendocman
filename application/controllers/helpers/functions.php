@@ -700,6 +700,92 @@ function msg(string $string): string
 }
 
 /**
+ * Translate a string, falling back to the given English text when the
+ * language file has no entry for the key (used by the Property feature).
+ * @param string $key
+ * @param string $default
+ * @return string
+ */
+function pmsg(string $key, string $default): string
+{
+    if (isset($GLOBALS['lang'][$key])) {
+        return e::h($GLOBALS['lang'][$key]);
+    }
+    return e::h($default);
+}
+
+/**
+ * All labels used by the Property pages, keyed by a short name.
+ * Falls back to English when a language file has no entry.
+ * @return array
+ */
+function property_labels(): array
+{
+    return [
+        'properties' => pmsg('property_properties', 'Properties'),
+        'property' => pmsg('property_property', 'Property'),
+        'none' => pmsg('property_none', 'No property'),
+        'reference' => pmsg('property_reference', 'Reference'),
+        'address' => pmsg('property_address', 'Address'),
+        'city' => pmsg('property_city', 'City'),
+        'type' => pmsg('property_type', 'Type'),
+        'price' => pmsg('property_price', 'Price'),
+        'status' => pmsg('property_status', 'Status'),
+        'owner_name' => pmsg('property_owner_name', 'Owner'),
+        'description' => pmsg('property_description', 'Description'),
+        'add' => pmsg('property_add', 'Add property'),
+        'edit' => pmsg('property_edit', 'Edit property'),
+        'save' => pmsg('property_save', 'Save'),
+        'cancel' => pmsg('property_cancel', 'Cancel'),
+        'delete' => pmsg('property_delete', 'Delete'),
+        'confirm_delete' => pmsg('property_confirm_delete', 'Delete this property? Its documents are kept but no longer linked to it.'),
+        'permissions' => pmsg('property_permissions', 'Who can see this property'),
+        'permissions_help' => pmsg('property_permissions_help', 'Rights apply to every document of the property, unless the document\'s category or the document itself sets its own rights for that person or department.'),
+        'documents' => pmsg('property_documents', 'Documents'),
+        'search' => pmsg('property_search', 'Search address, reference or city'),
+        'all' => pmsg('property_all', 'All'),
+        'no_results' => pmsg('property_no_results', 'No properties found.'),
+        'unassigned_docs' => pmsg('property_unassigned_docs', 'Documents without a property'),
+        'all_documents' => pmsg('property_all_documents', 'All documents'),
+        'home' => pmsg('property_home', 'Home'),
+        'filter' => pmsg('property_filter', 'Filter'),
+        'last_document' => pmsg('property_last_document', 'Last document'),
+        'no_documents' => pmsg('property_no_documents', 'No documents for this property yet.'),
+        'upload_here' => pmsg('property_upload_here', 'Add document'),
+        'back' => pmsg('property_back', 'Back to properties'),
+        'saved' => pmsg('property_saved', 'Property saved.'),
+        'deleted' => pmsg('property_deleted', 'Property deleted.'),
+        'error_reference_required' => pmsg('property_error_reference_required', 'Reference is required.'),
+        'error_address_required' => pmsg('property_error_address_required', 'Address is required.'),
+        'error_reference_exists' => pmsg('property_error_reference_exists', 'Another property already uses this reference.'),
+        'error_price' => pmsg('property_error_price', 'Price must be a number.'),
+        'error_not_found' => pmsg('property_error_not_found', 'Property not found.'),
+        'forbidden' => pmsg('property_forbidden', 'Forbidden'),
+        'view' => pmsg('property_view', 'View'),
+        'read' => pmsg('property_read', 'Read'),
+        'write' => pmsg('property_write', 'Write'),
+        'admin_right' => pmsg('property_admin_right', 'Admin'),
+        'no_rights' => pmsg('property_no_rights', 'No specific rights'),
+        'departments' => pmsg('property_departments', 'Departments'),
+        'users' => pmsg('property_users', 'Users'),
+        'type_apartment' => pmsg('property_type_apartment', 'Apartment'),
+        'type_house' => pmsg('property_type_house', 'House'),
+        'type_land' => pmsg('property_type_land', 'Land'),
+        'type_commercial' => pmsg('property_type_commercial', 'Commercial'),
+        'type_other' => pmsg('property_type_other', 'Other'),
+        'status_for_sale' => pmsg('property_status_for_sale', 'For sale'),
+        'status_for_rent' => pmsg('property_status_for_rent', 'For rent'),
+        'status_reserved' => pmsg('property_status_reserved', 'Reserved'),
+        'status_sold' => pmsg('property_status_sold', 'Sold'),
+        'status_rented' => pmsg('property_status_rented', 'Rented'),
+        'details' => pmsg('property_details', 'Details'),
+        'category' => pmsg('property_category', 'Category'),
+        'name' => pmsg('property_name', 'Name'),
+        'date' => pmsg('property_date', 'Date'),
+    ];
+}
+
+/**
  * Translation labels for the JS permissions editor (permissions-editor.js).
  * Keys map to the editor's `labels` option; values come from the current lang set.
  * @return array

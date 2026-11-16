@@ -134,6 +134,11 @@ if (!isset($_POST['submit'])) {
     $GLOBALS['smarty']->assign('avail_users', $users_array);
     $GLOBALS['smarty']->assign('avail_depts', $departments_array);
     $GLOBALS['smarty']->assign('cats_array', $cats_array);
+
+    // Properties the user may attach this document to (admins: all; others: write rights)
+    $GLOBALS['smarty']->assign('property_labels', property_labels());
+    $GLOBALS['smarty']->assign('props_array', Property::getAllWithCounts($pdo, Property::getVisibleIds($pdo, (int) $_SESSION['uid'], (int) $current_user_dept, $user_obj->isAdmin(), 3)));
+    $GLOBALS['smarty']->assign('pre_selected_property', (int) ($_GET['property_id'] ?? 0));
     $GLOBALS['smarty']->assign('dept_perms_array', $dept_perms_array);
     $GLOBALS['smarty']->assign('user_id', $_SESSION['uid']);
     $GLOBALS['smarty']->assign('db_prefix', $GLOBALS['CONFIG']['db_prefix']);
@@ -296,12 +301,24 @@ if (!isset($_POST['submit'])) {
             exit;
         }
 
+        // Property the document belongs to (0 = none). Non-admins may only pick
+        // a property they have write rights on; anything else is ignored.
+        $chosen_property_id = 0;
+        $requested_property = (int) ($_REQUEST['property_id'] ?? 0);
+        if ($requested_property > 0 && Property::getById($pdo, $requested_property) !== null) {
+            $allowed_properties = Property::getVisibleIds($pdo, (int) $_SESSION['uid'], (int) $current_user_dept, $user_obj->isAdmin(), 3);
+            if ($allowed_properties === null || in_array($requested_property, $allowed_properties, true)) {
+                $chosen_property_id = $requested_property;
+            }
+        }
+
         // Gather perms arrays exactly as today
         $userPermission = $_REQUEST['user_permission'] ?? [];
         $deptPermission = $_POST['department_permission'] ?? [];
 
         $fileId = Document::create($pdo, [
             'category' => (int) $_REQUEST['category'],
+            'property_id' => $chosen_property_id,
             'owner_id' => (int) $owner_id,
             'realname' => $_FILES['file']['name'][$count],
             'description' => $_REQUEST['description'],

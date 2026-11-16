@@ -47,6 +47,7 @@ if (!defined('FileData_class')) {
     class FileData extends databaseData
     {
         public int $category;
+        public int $property_id = 0;
         public int $owner;
         public string $created_date;
         public string $description;
@@ -110,6 +111,7 @@ if (!defined('FileData_class')) {
             $query = "
               SELECT
                 category,
+                property_id,
                 owner,
                 created,
                 description,
@@ -131,6 +133,7 @@ if (!defined('FileData_class')) {
             if ($stmt->rowCount() == $this->result_limit) {
                 foreach ($result as $row) {
                     $this->category = $row['category'];
+                    $this->property_id = (int) ($row['property_id'] ?? 0);
                     $this->owner = $row['owner'];
                     $this->created_date = $row['created'];
                     $this->description = stripslashes($row['description']);
@@ -156,6 +159,7 @@ if (!defined('FileData_class')) {
                 {$GLOBALS['CONFIG']['db_prefix']}$this->TABLE_DATA
               SET
                 category = :category,
+                property_id = :property_id,
                 owner = :owner,
                 description = :description,
                 comment = :comment,
@@ -170,6 +174,7 @@ if (!defined('FileData_class')) {
             $stmt = $this->connection->prepare($query);
             $stmt->execute(array(
                 ':category' => $this->category,
+                ':property_id' => $this->property_id,
                 ':owner' => $this->owner,
                 ':description' => $this->description,
                 ':comment' => $this->comment,
@@ -215,6 +220,23 @@ if (!defined('FileData_class')) {
         public function setCategory($value)
         {
             $this->category = $value;
+        }
+
+        /**
+         * return this file's property id (0 = not linked to a property)
+         * @return int
+         */
+        public function getPropertyId()
+        {
+            return (int) $this->property_id;
+        }
+
+        /**
+         * @param int $value
+         */
+        public function setPropertyId($value)
+        {
+            $this->property_id = (int) $value;
         }
 
         /**

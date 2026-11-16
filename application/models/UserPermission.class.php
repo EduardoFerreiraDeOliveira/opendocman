@@ -30,6 +30,7 @@ if (!defined('UserPermission_class')) {
         public $user_perms_obj;
         public $dept_perms_obj;
         public $category_perms_obj;
+        public $property_perms_obj;
         public $FORBIDDEN_RIGHT;
         public $NONE_RIGHT;
         public $VIEW_RIGHT;
@@ -91,6 +92,7 @@ if (!defined('UserPermission_class')) {
 
             // Create CategoryPerms object
             $this->category_perms_obj = new CategoryPerms($this->connection);
+            $this->property_perms_obj = new PropertyPerms($this->connection);
 
             if ($this->category_perms_obj === null) {
                 throw new Exception("CategoryPerms object is null");
@@ -172,7 +174,16 @@ if (!defined('UserPermission_class')) {
             $category_file_array = array_diff($category_file_array, $user_perms_file_array);
             $category_file_array = array_diff($category_file_array, $dept_perms_file_array);
 
-            $total_listing = array_merge($user_perms_file_array, $dept_perms_file_array, $category_file_array);
+            // Files inherited from the file's property permission template.
+            // Category rules win, so the helper skips files whose category has
+            // a row for this user or department (mirrors getAuthority()).
+            $property_file_array = $this->getPropertyFileIds($this->VIEW_RIGHT, $limit);
+            $property_file_array = array_diff($property_file_array, $array);
+            $property_file_array = array_diff($property_file_array, $user_perms_file_array);
+            $property_file_array = array_diff($property_file_array, $dept_perms_file_array);
+            $property_file_array = array_diff($property_file_array, $category_file_array);
+
+            $total_listing = array_merge($user_perms_file_array, $dept_perms_file_array, $category_file_array, $property_file_array);
             //$total_listing = array_unique( $total_listing);
             //$result_array = array_values($total_listing);
             return $total_listing;
@@ -199,7 +210,8 @@ if (!defined('UserPermission_class')) {
             $dept_perms_file_array = $this->dept_perms_obj->getCurrentReadRight($limit);
             $published_file_array = $this->user_obj->getPublishedData(1);
             $category_file_array = $this->getCategoryFileIds($this->READ_RIGHT, $limit);
-            $result_array = array_values(array_unique(array_merge($published_file_array, $user_perms_file_array, $dept_perms_file_array, $category_file_array)));
+            $property_file_array = $this->getPropertyFileIds($this->READ_RIGHT, $limit);
+            $result_array = array_values(array_unique(array_merge($published_file_array, $user_perms_file_array, $dept_perms_file_array, $category_file_array, $property_file_array)));
             return $result_array;
         }
 
@@ -247,6 +259,62 @@ if (!defined('UserPermission_class')) {
                      AND NOT EXISTS (
                          SELECT 1 FROM {$GLOBALS['CONFIG']['db_prefix']}category_perms cp2
                          WHERE cp2.cat_id = d.category AND cp2.user_id = :uid
+                     ))
+                  )
+                $limit_query
+            ";
+            $stmt = $this->connection->prepare($query);
+            $stmt->execute(array(
+                ':uid' => $this->uid,
+                ':dept' => $deptId,
+                ':right' => $right,
+            ));
+
+            return $stmt->fetchAll(PDO::FETCH_COLUMN);
+        }
+
+        /**
+         * Return the IDs of publishable files the user can access at or above
+         * $right through the permission template of the file's property
+         * ("live inheritance", the third level after file and category).
+         *
+         * Category rules come first: files whose category has a row for this
+         * user or this user's department are left to the category channel
+         * (even when that row forbids access). Files with any doc-level
+         * user_perms row are excluded because that row is authoritative.
+         * A property-user row takes priority over the property-dept row.
+         *
+         * @param int $right
+         * @param bool $limit
+         * @return array
+         */
+        protected function getPropertyFileIds($right, $limit = true)
+        {
+            $prefix = $GLOBALS['CONFIG']['db_prefix'];
+            $limit_query = ($limit) ? "LIMIT {$GLOBALS['CONFIG']['max_query']}" : '';
+            $deptId = (int) $this->user_obj->getDeptId();
+            $query = "
+                SELECT d.id
+                FROM {$prefix}$this->TABLE_DATA d
+                JOIN {$prefix}property_perms pp ON pp.prop_id = d.property_id
+                WHERE d.publishable = 1
+                  AND d.property_id > 0
+                  AND NOT EXISTS (
+                      SELECT 1 FROM {$prefix}$this->TABLE_USER_PERMS up
+                      WHERE up.uid = :uid AND up.fid = d.id
+                  )
+                  AND NOT EXISTS (
+                      SELECT 1 FROM {$prefix}category_perms cp
+                      WHERE cp.cat_id = d.category
+                        AND (cp.user_id = :uid OR (cp.dept_id = :dept AND :dept > 0))
+                  )
+                  AND (
+                    (pp.user_id = :uid AND pp.rights >= :right)
+                    OR
+                    (pp.dept_id = :dept AND :dept > 0 AND pp.rights >= :right
+                     AND NOT EXISTS (
+                         SELECT 1 FROM {$prefix}property_perms pp2
+                         WHERE pp2.prop_id = d.property_id AND pp2.user_id = :uid
                      ))
                   )
                 $limit_query
@@ -375,6 +443,24 @@ if (!defined('UserPermission_class')) {
                 $catDeptPerm = $this->category_perms_obj->getPermission($catId, null, $this->user_obj->getDeptId());
                 if ($catDeptPerm !== null) {
                     return $catDeptPerm;
+                }
+            }
+
+            // Property fallback: used only when the category says nothing about
+            // this user or department, so category rules (including "forbidden")
+            // always win over the property template.
+            $propId = $fileData->getPropertyId();
+            if ($propId > 0) {
+                $propUserPerm = $this->property_perms_obj->getPermission($propId, $this->uid, null);
+                if ($propUserPerm !== null) {
+                    return $propUserPerm;
+                }
+                $deptId = (int) $this->user_obj->getDeptId();
+                if ($deptId > 0) {
+                    $propDeptPerm = $this->property_perms_obj->getPermission($propId, null, $deptId);
+                    if ($propDeptPerm !== null) {
+                        return $propDeptPerm;
+                    }
                 }
             }
 

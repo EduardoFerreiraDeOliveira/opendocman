@@ -47,13 +47,44 @@ CREATE TABLE `odm_data` (
                 is_public tinyint(1) DEFAULT 0,
                 reviewer int(11) unsigned default NULL,
                 reviewer_comments varchar(255) default NULL,
+                property_id int(11) unsigned NOT NULL default '0',
                 PRIMARY KEY  (id),
                 KEY data_idx (id,owner),
                 KEY id (id),
                 KEY id_2 (id),
                 KEY publishable (publishable),
+                KEY property_id (property_id),
                 KEY description (description(200))
             ) ENGINE = MYISAM;
+
+CREATE TABLE `odm_property` (
+                id int(11) unsigned NOT NULL auto_increment,
+                reference varchar(50) NOT NULL default '',
+                address varchar(255) NOT NULL default '',
+                city varchar(100) default NULL,
+                type varchar(30) NOT NULL default 'apartment',
+                price decimal(12,2) default NULL,
+                status varchar(20) NOT NULL default 'for_sale',
+                owner_name varchar(255) default NULL,
+                description text default NULL,
+                created datetime NOT NULL,
+                created_by int(11) unsigned default NULL,
+                PRIMARY KEY (id),
+                UNIQUE KEY reference (reference),
+                KEY city (city),
+                KEY status (status)
+            ) ENGINE = MYISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE `odm_property_perms` (
+                prop_id int(11) unsigned NOT NULL,
+                dept_id int(11) unsigned NOT NULL default '0',
+                user_id int(11) unsigned NOT NULL default '0',
+                rights tinyint(4) NOT NULL default '0',
+                PRIMARY KEY (prop_id, dept_id, user_id),
+                KEY prop_id (prop_id),
+                KEY dept_id (dept_id),
+                KEY user_id (user_id)
+            ) ENGINE = MYISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE `odm_department` (
                 id int(11) unsigned NOT NULL auto_increment,
@@ -180,7 +211,7 @@ INSERT INTO `odm_rights` VALUES (2,'read');
 INSERT INTO `odm_rights` VALUES (3,'write');
 INSERT INTO `odm_rights` VALUES (4,'admin');
 INSERT INTO `odm_user` VALUES (NULL,'admin','$2y$12$/uz3AqsQggtkgx5Gjlj4/.gjSDTkmomHUhHYBN.GnriGQg1E84JZC','1','5555551212','admin@example.com','User','Admin','',1,1,1,NULL);
-INSERT INTO `odm_odmsys` VALUES (NULL,'version','1.7.5');
+INSERT INTO `odm_odmsys` VALUES (NULL,'version','1.7.6');
 INSERT INTO `odm_settings` VALUES(NULL, 'debug', 'False', '(True/False) - Default=False - Debug the installation (not working)', 'bool');
 INSERT INTO `odm_settings` VALUES(NULL, 'demo', 'False', '(True/False) This setting is for a demo installation, where random people will be all loggging in as the same username/password like "demo/demo". This will keep users from removing files, users, etc.', 'bool');
 INSERT INTO `odm_settings` VALUES(NULL, 'authen', 'mysql', '(Default = mysql) Currently only MySQL authentication is supported', '');

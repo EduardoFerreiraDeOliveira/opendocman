@@ -141,6 +141,17 @@ if (!isset($_REQUEST['submit'])) {
         $GLOBALS['smarty']->assign('avail_users', $user_perms_array);
         $GLOBALS['smarty']->assign('avail_depts', $dept_perms_array);
         $GLOBALS['smarty']->assign('cats_array', $cats_array);
+
+        // Properties this document can be attached to (admins: all; others: write
+        // rights). The document's current property is always kept in the list.
+        $current_property_id = $filedata->getPropertyId();
+        $selectable_property_ids = Property::getVisibleIds($pdo, (int) $_SESSION['uid'], (int) $current_user_dept, $user_perms_obj->user_obj->isAdmin(), 3);
+        if ($selectable_property_ids !== null && $current_property_id > 0 && !in_array($current_property_id, $selectable_property_ids, true)) {
+            $selectable_property_ids[] = $current_property_id;
+        }
+        $GLOBALS['smarty']->assign('property_labels', property_labels());
+        $GLOBALS['smarty']->assign('props_array', Property::getAllWithCounts($pdo, $selectable_property_ids));
+        $GLOBALS['smarty']->assign('pre_selected_property', $current_property_id);
         $GLOBALS['smarty']->assign('user_id', $_SESSION['uid']);
         $GLOBALS['smarty']->assign('pre_selected_owner', $owner_id);
         $GLOBALS['smarty']->assign('pre_selected_category', $category);
@@ -236,6 +247,23 @@ if (!isset($_REQUEST['submit'])) {
 
     // update category
     $filedata->setCategory($_REQUEST['category']);
+
+    // update property (only when the form sent one). Non-admins may only pick a
+    // property they have write rights on, or keep the current one.
+    if (isset($_REQUEST['property_id'])) {
+        $requested_property = (int) $_REQUEST['property_id'];
+        $current_property_id = $filedata->getPropertyId();
+        $edit_user = new User($_SESSION['uid'], $pdo);
+        $allowed_properties = Property::getVisibleIds($pdo, (int) $_SESSION['uid'], (int) $edit_user->getDeptId(), $edit_user->isAdmin(), 3);
+        if (
+            $requested_property === 0
+            || $requested_property === $current_property_id
+            || ($requested_property > 0 && Property::getById($pdo, $requested_property) !== null
+                && ($allowed_properties === null || in_array($requested_property, $allowed_properties, true)))
+        ) {
+            $filedata->setPropertyId($requested_property);
+        }
+    }
     $filedata->setDescription($_REQUEST['description']);
     $filedata->setComment($_REQUEST['comment']);
     if (isset($_REQUEST['file_owner'])) {

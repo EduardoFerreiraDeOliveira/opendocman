@@ -38,6 +38,8 @@ require_once APPLICATION_PATH . '/models/SnapshotManager.class.php';
 require_once APPLICATION_PATH . '/models/User.class.php';
 require_once APPLICATION_PATH . '/models/Dept_Perms.class.php';
 require_once APPLICATION_PATH . '/models/CategoryPerms.class.php';
+require_once APPLICATION_PATH . '/models/PropertyPerms.class.php';
+require_once APPLICATION_PATH . '/models/Property.class.php';
 require_once APPLICATION_PATH . '/models/FileData.class.php';
 require_once APPLICATION_PATH . '/models/User_Perms.class.php';
 require_once APPLICATION_PATH . '/models/UserPermission.class.php';
